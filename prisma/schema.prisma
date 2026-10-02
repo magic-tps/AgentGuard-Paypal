@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum TransactionStatus {
+  DRAFT
+  POLICY_CHECKED
+  BLOCKED
+  REQUIRES_APPROVAL
+  APPROVED
+  PAYPAL_ORDER_CREATED
+  PAYER_APPROVED
+  AUTHORIZED
+  FINAL_POLICY_CHECK
+  CAPTURED
+  VOIDED
+  FAILED
+}
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  mandates SpendingMandate[]
+  agents Agent[]
+  approvals HumanApproval[]
+}
+model SpendingMandate {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  name String
+  originalIntent String
+  status String @default("DRAFT")
+  version Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  versions PolicyVersion[]
+  transactions Transaction[]
+  audits AuditEvent[]
+  @@index([userId, status])
+}
+model PolicyVersion {
+  id String @id @default(uuid()) @db.Uuid
+  mandateId String @db.Uuid
+  mandate SpendingMandate @relation(fields: [mandateId], references: [id])
+  version Int
+  policy Json
+  model String
+  originalIntent String
+  confirmedAt DateTime?
+  createdAt DateTime @default(now())
+  transactions Transaction[]
+  approvals HumanApproval[]
+  @@unique([mandateId, version])
+}
+model Agent {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user User @relation(fields: [userId], references: [id])
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  transactions Transaction[]
+}
+model Merchant {
+  id String @id @default(uuid()) @db.Uuid
+  name String @unique
+  trusted Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  products Product[]
+  transactions Transaction[]
+}
+model Product {
+  id String @id @default(uuid()) @db.Uuid
+  merchantId String @db.Uuid
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  name String
+  description String
+  priceCents Int
+  currency String @default("USD")
+  category String
+  condition String
+  specifications Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([merchantId, name])
+}
+model PurchaseRequest {
+  id String @id @default(uuid()) @db.Uuid
+  proposal Json
+  explanation String
+  source String
+  createdAt DateTime @default(now())
+  transaction Transaction?
+}
+model Transaction {
+  id String @id @default(uuid()) @db.Uuid
+  purchaseRequestId String @unique @db.Uuid
+  purchaseRequest PurchaseRequest @relation(fields: [purchaseRequestId], references: [id])
+  mandateId String @db.Uuid
+  mandate SpendingMandate @relation(fields: [mandateId], references: [id])
+  policyVersionId String @db.Uuid
+  policyVersion PolicyVersion @relation(fields: [policyVersionId], references: [id])
+  agentId String @db.Uuid
+  agent Agent @relation(fields: [agentId], references: [id])
+  merchantId String @db.Uuid
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+  status TransactionStatus @default(DRAFT)
+  amount Decimal @db.Decimal(12, 2)
+  currency String
+  quote Json
+  currentQuote Json
+  quoteHash String
+  mode String
+  scenario String?
+  riskLevel String
+  riskScore Int
+  decision String
+  paypalOrderId String? @unique
+  paypalAuthorizationId String? @unique
+  paypalCaptureId String? @unique
+  paypalStatus String @default("NOT_EXECUTED")
+  approvalUrl String?
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items TransactionItem[]
+  decisions PolicyDecision[]
+  approvals HumanApproval[]
+  audits AuditEvent[]
+  operations PayPalOperation[]
+  receipt DecisionReceipt?
+  @@index([mandateId, status])
+  @@index([createdAt])
+}
+model TransactionItem {
+  id String @id @default(uuid()) @db.Uuid
+  transactionId String @db.Uuid
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  productId String @db.Uuid
+  name String
+  quantity Int
+  unitPriceCents Int
+  snapshot Json
+  createdAt DateTime @default(now())
+}
+model PolicyDecision {
+  id String @id @default(uuid()) @db.Uuid
+  transactionId String @db.Uuid
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  phase String
+  result Json
+  createdAt DateTime @default(now())
+}
+model HumanApproval {
+  id String @id @default(uuid()) @db.Uuid
+  transactionId String @db.Uuid
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  policyVersionId String @db.Uuid
+  policyVersion PolicyVersion @relation(fields: [policyVersionId], references: [id])
+  approverId String? @db.Uuid
+  approver User? @relation(fields: [approverId], references: [id])
+  amount Decimal @db.Decimal(12, 2)
+  currency String
+  quoteHash String
+  status String @default("PENDING")
+  createdAt DateTime @default(now())
+  decidedAt DateTime?
+  @@unique([transactionId, quoteHash, policyVersionId])
+}
+model AuditEvent {
+  id String @id @default(uuid()) @db.Uuid
+  transactionId String? @db.Uuid
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+  mandateId String? @db.Uuid
+  mandate SpendingMandate? @relation(fields: [mandateId], references: [id])
+  actor String
+  type String
+  metadata Json
+  createdAt DateTime @default(now())
+  @@index([transactionId, createdAt])
+  @@index([mandateId, createdAt])
+}
+model PayPalOperation {
+  id String @id @default(uuid()) @db.Uuid
+  transactionId String @db.Uuid
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  operation String
+  requestId String @unique
+  mode String
+  result Json?
+  status String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([transactionId, operation])
+}
+model DecisionReceipt {
+  id String @id @default(uuid()) @db.Uuid
+  transactionId String @unique @db.Uuid
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  snapshot Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model WebhookEvent {
+  id String @id
+  eventType String
+  resourceId String?
+  metadata Json
+  processedAt DateTime @default(now())
+}
