@@ -1,6 +1,6 @@
 # AgentGuard: despliegue público con Render, Neon y PayPal Sandbox
 
-Esta guía prepara el procedimiento externo. No confirma un despliegue Render, una conexión Neon ni un webhook público ya realizados. El código y las pruebas locales se describen en el [informe de preparación](deployment-report.md). Se conserva la arquitectura financiera validada y el `.env` local; no se ejecutan pagos al desplegar o comprobar readiness.
+Esta guía describe el procedimiento externo. La conexión real Neon, la migración y el seed se completaron el **3 de octubre de 2026** con las credenciales suministradas; Render y la entrega de webhooks públicos siguen pendientes. El código, las pruebas locales y la evidencia Neon se describen en el [informe de preparación](deployment-report.md). Se conserva la arquitectura financiera validada y el `.env` local; no se ejecutan pagos al desplegar o comprobar readiness.
 
 ## Automatizado por el repositorio — AUTOMATED BY REPOSITORY
 
@@ -14,7 +14,7 @@ Esta guía prepara el procedimiento externo. No confirma un despliegue Render, u
 
 ## Configuración manual — MANUAL USER CONFIGURATION
 
-Necesitas acceso propio a GitHub, Neon, Render y la misma app REST Sandbox de PayPal. Esta preparación no ha autenticado ni publicado en esas cuentas. No añadas `.env`, `.data`, passwords, cadenas de conexión o credenciales al repositorio, tickets, capturas ni logs.
+Necesitas acceso propio a GitHub, Neon, Render y la misma app REST Sandbox de PayPal. Se usó la conexión administrativa a PostgreSQL Neon; no se inició sesión en dashboards ni se publicó el servicio. No añadas `.env`, `.data`, passwords, cadenas de conexión o credenciales al repositorio, tickets, capturas ni logs.
 
 ### Configuración exacta de Render
 
