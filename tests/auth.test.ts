@@ -56,3 +56,15 @@ it("allows explicit loopback demo access and requires a session remotely", () =>
   vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://agentguard.example");
   expect(localDemo(new Request("http://localhost:3000/api/session"))).toBe(false);
 });
+it("requires a signed operator session for a remote demo request even with spoofed local headers", () => {
+  protectedEnvironment();
+  vi.stubEnv("DEMO_MODE", "true");
+  const headers = { "X-Forwarded-Host": "localhost", "X-Forwarded-For": "127.0.0.1" };
+  const remote = new Request("https://agentguard.example/api/session", { headers });
+  expect(localDemo(remote)).toBe(false);
+  expect(() => authenticatedUser(remote)).toThrow("Sign in");
+  const cookie = sessionCookie("test-operator-password");
+  expect(
+    authenticatedUser(new Request(remote.url, { headers: { ...headers, Cookie: cookie } })),
+  ).toBe(DEMO_USER_ID);
+});

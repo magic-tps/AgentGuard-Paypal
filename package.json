@@ -2,10 +2,13 @@
   "name": "agentguard",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "prisma generate && next build",
-    "start": "next start --hostname 127.0.0.1",
+    "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
@@ -15,6 +18,9 @@
     "test:e2e": "playwright test",
     "paypal:check": "node scripts/check-sandbox.mjs",
     "ai:check": "node --conditions=react-server --import tsx scripts/check-local-ai.ts",
+    "deployment:check": "node --conditions=react-server --import tsx scripts/check-deployment.ts",
+    "secret:check": "node scripts/check-secrets.mjs",
+    "db:deploy": "node scripts/deploy-database.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node --conditions=react-server --import tsx prisma/seed.ts",

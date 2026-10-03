@@ -1,0 +1,34 @@
+# No database resource or credentials are provisioned by this descriptor.
+services:
+  - type: web
+    name: agentguard
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Build and explicit seed require Prisma/tsx/Tailwind from devDependencies.
+      - key: NPM_CONFIG_INCLUDE
+        value: dev
+      - key: AI_PROVIDER
+        value: deterministic
+      - key: DEMO_MODE
+        value: "true"
+      - key: PAYPAL_ENV
+        value: sandbox
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: OPERATOR_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      # Add PAYPAL_WEBHOOK_ID manually after registering the public endpoint.

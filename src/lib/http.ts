@@ -6,6 +6,7 @@ import { AppError } from "./domain/errors";
 import { authenticatedUser } from "./security/auth";
 import { rateLimiter } from "./security/rate-limit";
 import { appUrl } from "./config";
+import { validateEnvironment } from "./environment";
 export function validateOrigin(request: Request) {
   if (["GET", "HEAD"].includes(request.method)) return;
   const origin = request.headers.get("origin");
@@ -108,6 +109,7 @@ export function errorResponse(error: unknown) {
 export function api(handler: (request: Request, userId: string) => Promise<unknown>) {
   return async (request: Request) => {
     try {
+      validateEnvironment();
       validateOrigin(request);
       const user = authenticatedUser(request);
       rateLimiter.check(`operator:${user}`, 180, 60000);

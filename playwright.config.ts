@@ -18,11 +18,12 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `${process.env.E2E_PRODUCTION === "true" ? "npm start" : "npm run dev"} -- --port ${port}`,
+    command: process.env.E2E_PRODUCTION === "true" ? "npm start" : `npm run dev -- --port ${port}`,
     url: `${localUrl}/api/session`,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     env: {
+      PORT: String(port),
       DEMO_MODE: "true",
       AI_PROVIDER: "deterministic",
       OPENAI_API_KEY: "",

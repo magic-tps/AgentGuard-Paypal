@@ -97,6 +97,19 @@ describe("PayPal REST adapter with only fetch substituted", () => {
       "authorize-key",
     );
   });
+  it("uses the runtime HTTPS public origin for both callbacks without changing AUTHORIZE", async () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://agentguard.example/");
+    fetchMock.mockResolvedValueOnce(response({ id: "ORDER-public", status: "CREATED" }));
+    const { createOrder } = await import("../src/lib/paypal/orders");
+    await createOrder(purchase(), "transaction-public", "stable-public-key");
+    const payload = JSON.parse(String(fetchMock.mock.calls[1][1]?.body));
+    expect(payload.intent).toBe("AUTHORIZE");
+    expect(payload.payment_source.paypal.experience_context).toMatchObject({
+      return_url: "https://agentguard.example/transactions/transaction-public?paypal=approved",
+      cancel_url: "https://agentguard.example/transactions/transaction-public?paypal=cancelled",
+    });
+    expect(JSON.stringify(payload)).not.toContain("localhost");
+  });
   it("captures only the checked amount and voids with separate operation keys", async () => {
     fetchMock.mockResolvedValueOnce(
       response({

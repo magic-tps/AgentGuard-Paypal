@@ -135,11 +135,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="small">Policy controls online</span>
               <AiModeBadge />
               <Badge tone={session?.mode === "PAYPAL_SANDBOX" ? "teal" : "neutral"}>
-                {session?.mode === "PAYPAL_SANDBOX"
-                  ? "PAYPAL SANDBOX"
-                  : session
-                    ? "SIMULATED"
-                    : "CONNECTING"}
+                <span aria-label="PAYMENT MODE">
+                  {session?.mode === "PAYPAL_SANDBOX"
+                    ? "PAYPAL SANDBOX"
+                    : session
+                      ? "SIMULATED"
+                      : "CONNECTING"}
+                </span>
               </Badge>
             </div>
           </div>

@@ -3,41 +3,7 @@ import { z } from "zod";
 import { zodTextFormat } from "openai/helpers/zod";
 import { AppError } from "../../domain/errors";
 import type { StructuredRequest, AiStatus } from "../types";
-
-function configuration() {
-  const model = process.env.OLLAMA_MODEL?.trim();
-  const timeout = Number(process.env.OLLAMA_TIMEOUT_MS || 90000);
-  let base: URL;
-  try {
-    base = new URL(process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434");
-  } catch {
-    throw new AppError("OLLAMA_CONFIGURATION_INVALID", "Set a valid local OLLAMA_BASE_URL.", 503);
-  }
-  if (
-    !["http:", "https:"].includes(base.protocol) ||
-    !["localhost", "127.0.0.1", "[::1]", "host.docker.internal"].includes(base.hostname) ||
-    base.username ||
-    base.password ||
-    base.search ||
-    base.hash ||
-    base.pathname !== "/" ||
-    !Number.isInteger(timeout) ||
-    timeout < 1000 ||
-    timeout > 180000
-  )
-    throw new AppError(
-      "OLLAMA_CONFIGURATION_INVALID",
-      "Ollama requires a local server URL and a timeout between 1000 and 180000 ms.",
-      503,
-    );
-  if (!model || /(?:[:\-]cloud)(?:$|:)/i.test(model))
-    throw new AppError(
-      "OLLAMA_MODEL_MISSING",
-      "Set OLLAMA_MODEL to a downloaded local model. Cloud models are unsupported.",
-      503,
-    );
-  return { model, base, timeout };
-}
+import { ollamaConfiguration as configuration } from "../../environment";
 
 export async function ollamaGenerate<T extends z.ZodTypeAny>(request: StructuredRequest<T>) {
   const { model, base, timeout } = configuration();

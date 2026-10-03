@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { AppError } from "../domain/errors";
 import { DEMO_USER_ID } from "../domain/demo";
 import { appUrl } from "../config";
+import { loopbackHosts } from "../environment";
 const cookieName = "agentguard_session";
 function secret() {
   const s = process.env.SESSION_SECRET;
@@ -27,8 +28,9 @@ export function localDemo(request: Request) {
   const actual = new URL(request.url);
   return (
     process.env.DEMO_MODE === "true" &&
-    ["localhost", "127.0.0.1", "[::1]"].includes(allowed.hostname) &&
-    ["localhost", "127.0.0.1", "[::1]"].includes(actual.hostname)
+    process.env.RENDER !== "true" &&
+    loopbackHosts.includes(allowed.hostname) &&
+    loopbackHosts.includes(actual.hostname)
   );
 }
 export function authenticatedUser(request: Request) {
@@ -42,10 +44,12 @@ export function authenticatedUser(request: Request) {
   if (!value) throw new AppError("UNAUTHENTICATED", "Sign in as the workspace operator.", 401);
   const [id, expires, signature] = value.split(".");
   if (
+    value.split(".").length !== 3 ||
     id !== DEMO_USER_ID ||
     !expires ||
     !signature ||
-    Number(expires) < Date.now() ||
+    !Number.isSafeInteger(Number(expires)) ||
+    Number(expires) <= Date.now() ||
     !safeEqual(sign(`${id}.${expires}`), signature)
   )
     throw new AppError("UNAUTHENTICATED", "Your session expired. Sign in again.", 401);

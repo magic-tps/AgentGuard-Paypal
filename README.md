@@ -8,6 +8,10 @@ AgentGuard is a working hackathon MVP for autonomous-commerce controls. A human 
 
 AI interprets intent. Deterministic controls authorize money movement.
 
+Consulta el [informe maestro completo de AgentGuard](docs/informe-maestro-agentguard.md): arquitectura, implementación, contratos, base de datos, evidencias, operación, pruebas, limitaciones y anexos con todos los documentos del proyecto.
+
+Para publicar, sigue la [guía de despliegue Render + Neon + PayPal Sandbox](docs/deployment.md). Distingue las verificaciones locales de la configuración y validación externa pendientes.
+
 ## Run locally
 
 Requires Node.js 22, npm, PostgreSQL, and a local Ollama server with a downloaded model. No paid AI API or `OPENAI_API_KEY` is required. This repository includes a local PostgreSQL launcher and a Docker Compose alternative. An explicitly selected deterministic demo fallback can also run without an LLM; payments keep their independent Sandbox/simulation mode.
@@ -16,7 +20,7 @@ Requires Node.js 22, npm, PostgreSQL, and a local Ollama server with a downloade
 npm ci
 ```
 
-If `.env` does not already exist, copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell; `cp .env.example .env` on macOS/Linux). Preserve an existing `.env` and its PayPal credentials. Configure the local model as described below before compiling a mandate.
+If `.env` does not already exist, copy `.env.example` to `.env` (`Copy-Item .env.example .env` in PowerShell; `cp .env.example .env` on macOS/Linux). Preserve an existing `.env` and its PayPal credentials. The example now has blank database/origin placeholders for public deployment. For a new local setup explicitly set `DATABASE_URL=postgresql://agentguard:agentguard_local@127.0.0.1:54329/agentguard` (public development credentials), `NEXT_PUBLIC_APP_URL=http://localhost:3000`, and `AI_PROVIDER=ollama` with the local model described below. Keep public credentials separate in the hosting environment.
 
 Terminal 1, start a real local PostgreSQL process; data persists in `.data/postgres`:
 
@@ -35,7 +39,7 @@ npm run dev
 
 Open **http://localhost:3000**. Use this exact origin to match `NEXT_PUBLIC_APP_URL`. The dashboard is seeded immediately. Seed is repeatable and preserves existing work.
 
-For a production bundle: `npm run build`, then `npm start`. The provided start scripts bind to loopback. For deployment, configure protected operator access, a private database, an HTTPS application origin, and the host binding appropriate for your platform.
+For a production bundle: `npm run build`, then `npm start`. Production uses the supported `next start` default interface **0.0.0.0** and honors **PORT**. Development remains loopback-only. For a production bundle used exclusively on your own machine, use `npm start -- --hostname 127.0.0.1`. Public deployment requires protected operator access, PostgreSQL with TLS, and an explicit HTTPS application origin; follow [the deployment guide](docs/deployment.md).
 
 ## Architecture
 

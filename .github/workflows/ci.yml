@@ -19,6 +19,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://agentguard:agentguard_local@127.0.0.1:54329/agentguard
       DEMO_MODE: "true"
+      AI_PROVIDER: deterministic
       NEXT_PUBLIC_APP_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4

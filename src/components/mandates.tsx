@@ -31,6 +31,7 @@ import { DEFAULT_INTENT } from "@/lib/domain/demo";
 import { spendingMandateSchema } from "@/lib/domain/schemas";
 import { date, money } from "@/lib/utils";
 import { AiModeBadge } from "@/components/ai-mode-badge";
+import { useSession } from "@/components/app-shell";
 export function MandatesList() {
   const { data, error, loading, refresh } = useResource<Mandate[]>("/api/mandates");
   return (
@@ -109,6 +110,7 @@ export function MandatesList() {
   );
 }
 export function MandateBuilder() {
+  const deterministic = useSession()?.aiMode === "DETERMINISTIC";
   const router = useRouter();
   const [intent, setIntent] = useState(DEFAULT_INTENT);
   const [name, setName] = useState("Workspace monitor upgrade");
@@ -216,8 +218,10 @@ export function MandateBuilder() {
           <div className="trust-note">
             <ShieldCheck size={21} />
             <p>
-              AI interprets intent. <strong>You review and activate.</strong> Generated policies are
-              saved as drafts.
+              {deterministic
+                ? "Deterministic rules interpret this demo intent; no AI inference is used. "
+                : "AI interprets intent. "}
+              <strong>You review and activate.</strong> Generated policies are saved as drafts.
             </p>
           </div>
         </aside>

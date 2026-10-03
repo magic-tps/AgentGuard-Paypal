@@ -5,6 +5,9 @@ import { sessionCookie, localDemo } from "@/lib/security/auth";
 import { rateLimiter } from "@/lib/security/rate-limit";
 import { paymentMode } from "@/lib/paypal/gateway";
 import { aiMode } from "@/lib/ai/provider";
+import { validateEnvironment } from "@/lib/environment";
+import { loginRateLimitKey } from "@/lib/security/login-identity";
+import { appUrl } from "@/lib/config";
 export const GET = api(async (r, user) => ({
   userId: user,
   name: "Workspace operator",
@@ -15,8 +18,9 @@ export const GET = api(async (r, user) => ({
 }));
 export async function POST(r: Request) {
   try {
+    validateEnvironment();
     validateOrigin(r);
-    rateLimiter.check("login", 5, 60000);
+    rateLimiter.check(loginRateLimitKey(r), 5, 60000);
     const { password } = await body(r, z.object({ password: z.string().max(256) }).strict());
     return NextResponse.json(
       { ok: true },
@@ -30,7 +34,7 @@ export async function DELETE(r: Request) {
   return api(async () => ({ ok: true }))(r).then((response) => {
     response.headers.set(
       "Set-Cookie",
-      "agentguard_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0",
+      `agentguard_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${appUrl().startsWith("https:") ? "; Secure" : ""}`,
     );
     return response;
   });

@@ -237,8 +237,10 @@ async function seed() {
   );
 }
 seed()
-  .catch((error) => {
-    console.error(error);
+  .catch(() => {
+    console.error(
+      "Seed failed. Check database connectivity and migrations securely; no values disclosed.",
+    );
     process.exitCode = 1;
   })
   .finally(() => db.$disconnect());
